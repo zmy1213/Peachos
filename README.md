@@ -142,7 +142,8 @@ GDTR寄存器长度为6字节（48位），前两个字节为GDT界限，后4个
 
 其中的段属性可以寻找资料查找
 
-target remote | qemu-system-x86_64 -hda ./boot.bin -S -gdb stdio
+
+
 gdb测试
 
 当ibm pc at系统被制造出来时，新的286处理器以及以后版本和旧有x86处理器并不兼容。旧的X86处理器（Intel 8086）有20位地址总线，这样可以访问最高1M内存。而386和以后版本有32地址总线，这样可以访问最高4G的内存。但是旧的8086处理器没有这么大的地址总线。为了保持兼容性Intel在地址线的第20位上制造了一个逻辑OR门，以便可以开启或关闭超过20位的地址总线。这样，为了兼容旧的处理器，在机器开启时A20被禁止的。
@@ -185,3 +186,48 @@ arm-none-eabi-gcc 是一种 ARM 架构专用的编译器，用于将 C/C++ 代�
 -ffreestanding 参数表示编译器应该生成一个无操作系统支持的可执行文件。这意味着程序需要自己处理硬件和系统资源，而不能依赖于操作系统提供的支持。
 -O0 参数表示关闭优化，以便在调试时更容易理解生成的代码。
 因此，该命令将链接脚本文件指定的目标文件链接成一个自由立足的、无操作系统支持的可执行二进制文件 ./bin/kernel.bin，该可执行文件可以被加载到内存中执行。
+
+.global 是为了让一个符号对编译器可见
+dd if=./dev/zero >> ./bin/os.bin
+/dev/zero 是一个特殊的设备文件，它会返回一个连续的 0 字节流。在这里，它用作输入文件以向 os.bin 写入连续的 0 字节，这通常用于填充文件以达到特定的大小。
+综上，这个指令的作用是将 ./bin/os.bin 文件的大小增加至指定大小，而其中的内容都为 0。
+
+; 将LBA地址存储到eax寄存器中
+mov eax, lba       
+
+; 将eax寄存器的高8位（即第24-31位）存储到ebx寄存器中
+mov ebx, eax
+shr eax, 24
+
+; 向0x1F6端口发送命令
+mov dx, 0x1F6
+out dx, al
+
+; 将扇区数存储到eax寄存器中
+mov eax, sector_count
+
+; 向0x1F2端口发送命令
+mov dx, 0x1F2
+out dx, al
+
+; 将LBA地址的第0-7位存储到0x1F3端口
+mov eax, ebx
+mov dx, 0x1F3
+out dx, al
+
+; 将LBA地址的第8-15位存储到0x1F4端口
+mov eax, ebx
+shr eax, 8
+mov dx, 0x1F4
+out dx, al
+
+; 将LBA地址的第16-23位存储到0x1F5端口
+mov eax, ebx
+shr eax, 16
+mov dx, 0x1F5
+out dx, al
+
+; 向0x1F7端口发送命令，读取硬盘数据
+mov edx, 0x1F7
+mov al, 0x20
+out dx, al
