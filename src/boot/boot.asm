@@ -65,8 +65,8 @@ load32:
     jmp CODE_SEG:0x0100000
 ata_lba_read:
     mov ebx,eax
-    or eax,0xE0
     shr eax,24
+    or eax,0xE0
     mov dx,0x1F6
     out dx,al;0x01 lba模式 flag
 
