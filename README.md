@@ -309,3 +309,10 @@ FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign
 -Wall：启用所有警告。
 -O0：不进行优化。
 -Iinc：指定头文件路径。
+
+gdb调试
+add-symbol-file ./build/kernelfull.o 0x100000
+target remote | qemu-system-x86_64 -hda ./bin/os.bin -gdb stdio -S
+break kernel_main
+
+0xB800是显示器输出的地方，有两个字节第一个是输出的ascll，第二个是颜色
