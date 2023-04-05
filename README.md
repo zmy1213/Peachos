@@ -195,6 +195,12 @@ dd if=./dev/zero >> ./bin/os.bin
 ; 将LBA地址存储到eax寄存器中
 mov eax, lba       
 
+ mov ebx,eax
+    or eax,0xE0 默认补0
+    shr eax,24
+    mov dx,0x1F6
+    out dx,al;0x01 lba模式 flag
+
 ; 将eax寄存器的高8位（即第24-31位）存储到ebx寄存器中
 mov ebx, eax
 shr eax, 24
@@ -257,3 +263,49 @@ out dx,al 是一条 x86 汇编指令，用于向一个 8 位的 I/O 端口输出
 具体来说，out dx,al 指令将端口地址存储在 dx 寄存器中，并将要输出的 8 位数据存储在 al 寄存器中。然后该指令向指定的 I/O 端口输出 al 寄存器中的数据，即将 al 中的数据写入到端口 dx 中。
 
 在上述代码中，out dx.al 指令将 eax 寄存器的最低 8 位数据（即 al）写入到端口地址存储在 dx 寄存器中的 I/O 端口。这个指令的作用是向 ATA 控制器发送一个命令。具体来说，该指令向端口 0x1F6 中输出 eax 寄存器中的最低 8 位数据，即发送一个 ATA 命令给磁盘。
+
+ rep insw
+rep insw 是一条 x86 汇编指令，它用于从 I/O 端口读取 16 位的数据，并将其存储到内存中。 rep 前缀指示指令将重复执行，insw 指令读取 16 位的数据并将其存储到地址寄存器中指定的地址中。在这个特定的代码中，rep insw 将读取磁盘控制器端口的数据并将其存储到内存中。
+
+.try_again:
+    mov dx,0x1f7
+    in al,dx
+    test al,8
+    jz .try_again
+
+    mov ecx,256
+    mov dx,0x1F0
+    rep insw
+    pop ecx
+    loop .next_sector
+    ret 
+test al, 8 的作用是测试 AL 寄存器的第四个比特位是否被设置为1。在此情况下，这个比特位表示“数据传输准备好”（Data Transfer Ready，DTR）的状态，如果为1，则表示数据传输已准备好。
+
+mov ecx, 256: 将循环计数器ECX设置为256，即要读取的字节数。
+mov dx, 0x1F0: 将I/O端口地址0x1F0（即磁盘控制器的数据端口）加载到DX寄存器中，以便在接下来的指令中使用它。
+rep insw: 循环执行指令insw，它的作用是从I/O端口DX读取一个字（16位），并将其存储在ES:DI指定的内存位置中。在这个例子中，ES和DI寄存器没有被显式地设置，因此默认情况下它们指向DS和BX寄存器中的地址。
+pop ecx: 从堆栈中弹出保存在之前的指令中的ECX寄存器的值。由于循环指令rep insw每次迭代都会将ECX递减2，因此在这里需要将其还原为最初的值256。
+loop .next_sector: 循环指令loop用于根据CX寄存器中的值跳转到目标标签（这里是.next_sector）。在每次迭代中，它都会自动将CX减1，直到它达到0为止，然后跳出循环。
+
+address 是输出段VMA（虚拟内存地址）的表达式
+
+gcc 参数
+—I -l  (小写的l)参数就是用来指定程序要链接的库，-l参数紧接着就是库名
+FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
+
+-g：生成调试信息，以便在调试时使用。
+-ffreestanding：编译一个没有标准库的程序。这个选项告诉gcc不要使用标准库，而是仅使用系统提供的库。
+-falign-jumps、-falign-functions、-falign-labels、-falign-loops：这些选项告诉gcc对程序进行对齐，从而提高程序执行的效率。
+-fstrength-reduce：优化循环和其它计算密集型代码。
+-fomit-frame-pointer：省略函数调用的帧指针，从而减小程序的大小。
+-finline-functions：内联函数，从而减少函数调用带来的开销。
+-Wno-unused-function、-Wno-unused-label、-Wno-unused-parameter：禁止编译器产生未使用变量的警告。
+-fno-builtin：禁止使用gcc自带的内置函数。
+-Werror：把所有的警告都视为错误，从而在编译时阻止产生警告。
+-Wno-cpp：禁止预处理器产生警告。
+-nostdlib：禁用标准库。
+-nostartfiles：禁用启动文件。
+-nodefaultlibs：禁用默认库。
+-Wall：启用所有警告。
+-O0：不进行优化。
+-Iinc：指定头文件路径。

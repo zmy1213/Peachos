@@ -62,7 +62,7 @@ gdt_descriptor:
 load32:
     mov eax,1
     mov ecx,100
-    mov edi,0x0100000
+    mov edi,0x0100000;
     call ata_lba_read
     jmp CODE_SEG:0x0100000
 ata_lba_read:
@@ -70,11 +70,11 @@ ata_lba_read:
     or eax,0xE0
     shr eax,24
     mov dx,0x1F6
-    out dx,al
+    out dx,al;0x01 lba模式 flag
 
     mov eax,ecx
     mov dx,0x1F2
-    out dx,al
+    out dx,al;一共的磁盘数量
 
     mov eax,ebx
     mov dx,0x1F3
