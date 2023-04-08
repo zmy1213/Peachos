@@ -1,6 +1,7 @@
 #include "kernel.h"
 #include <stdint.h>
 #include <stddef.h>
+#include "idt/idt.h"
 uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
 uint16_t terminal_col = 0;
@@ -23,13 +24,6 @@ void terminal_writechar(char c, char colour)
         terminal_col = 0;
         return;
     }
-
-    if (c == 0x08)
-    {
-        terminal_backspace();
-        return;
-    }
-
     terminal_putchar(terminal_col, terminal_row, c, colour);
     terminal_col += 1;
     if (terminal_col >= VGA_WIDTH)
@@ -47,23 +41,36 @@ void terminal_initialize()
     {
         for (int x = 0; x < VGA_WIDTH; x++)
         {
-            terminal_putchar(x, y, ' ', 0);
+            terminal_putchar(x, y,' ',0);
         }
     }   
 }
-
-
+size_t strlen(const char * c)
+{
+    size_t len = 0;
+    while(c[len])
+    {
+        ++len;
+    }
+    return len;
+}
 
 void print(const char* str)
 {
+    
     size_t len = strlen(str);
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
-        terminal_writechar(str[i], 15);
+        terminal_writechar(str[i],15);
     }
 }
+extern void problem();
 
 void kernel_main()
 {
+    terminal_initialize();
     print("Hello World!\nTest");
+    idt_init();
+
+    problem();
 }

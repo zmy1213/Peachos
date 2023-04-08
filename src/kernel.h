@@ -2,6 +2,7 @@
 #define KERNEL_H
 
 void kernel_main();
-const int VGA_WIDTH = 100;
-const int VGA_HEIGHT = 80;
+void print(const char*str);
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 20
 #endif

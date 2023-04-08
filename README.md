@@ -56,7 +56,7 @@ NOP"指令即空指令
 
 jmp short 这种格式的jmp指令实现的是上述的段内短转移，修改范围为-128～127
 
-是指中断服务程序入口地址的偏移量与段基值，一个中断向量占据4字节空间。中断向量表是8086系统内存中最低端1K字节空间，它的作用就是按照中断类型号从小到大的顺序存储对应的中断向量，总共存储256个中断向量。在中断响应过程中，CPU通过从接口电路获取的中断类型号（中断向量号）计算对应中断向量在表中的位置，并从中断向量表中获取中断向量，将程序流程转向中断服务程序的入口地址。
+中断向量是指中断服务程序入口地址的偏移量与段基值，一个中断向量占据4字节空间。中断向量表是8086系统内存中最低端1K字节空间，它的作用就是按照中断类型号从小到大的顺序存储对应的中断向量，总共存储256个中断向量。在中断响应过程中，CPU通过从接口电路获取的中断类型号（中断向量号）计算对应中断向量在表中的位置，并从中断向量表中获取中断向量，将程序流程转向中断服务程序的入口地址。
 四个字节 offset + segment
 
 int指令是X86汇编语言中最重要的指令之一。它的作用是引发中断
@@ -315,4 +315,65 @@ add-symbol-file ./build/kernelfull.o 0x100000
 target remote | qemu-system-x86_64 -hda ./bin/os.bin -gdb stdio -S
 break kernel_main
 
-0xB800是显示器输出的地方，有两个字节第一个是输出的ascll，第二个是颜色
+0xB800是显示器输出的地方，有两个字节第一个是输出的ascll，第二个是颜色、
+
+中断描述符表（Interrupt Descriptor Table，简称IDT）和中断向量表（Interrupt Vector Table，简称IVT）是操作系统中用于处理中断的重要数据结构。
+
+IDT是在系统启动时由操作系统初始化的，它包含了处理器能够识别和响应的所有中断类型的描述符。每个中断类型对应一个描述符，该描述符中包含了处理该中断的处理程序的入口地址等相关信息。
+
+IVT是一块位于物理内存中的表，它是由硬件设备初始化的，用于存储中断处理程序的地址。在Intel x86架构中，IVT位于内存地址0x0000到0x03FF，共256个中断向量。当硬件设备触发一个中断时，处理器会查找对应的中断向量，在IVT中获取中断处理程序的地址，然后跳转到该地址执行中断处理。
+
+因此，IDT和IVT都是处理中断的重要数据结构，但它们有着不同的作用和实现方式。IDT是由操作系统初始化的，用于存储处理中断的描述符，而IVT是由硬件设备初始化的，用于存储中断处理程序的地址
+
+中断描述符的结构:
+中断处理程序的偏移地址（Offset）：中断处理程序在内存中的地址，用于处理中断的具体操作。
+代码段选择器（Segment Selector）：用于指定处理中断的代码段在全局描述符表（Global Descriptor Table，简称GDT）中的索引号。
+属性（Attribute）：用于指定中断处理程序的属性，如中断类型、特权级等。
+保留位（Reserved）：保留字段，未使用。
+struct idt_entry {
+    uint16_t offset_low;
+    uint16_t segment_selector;
+    uint8_t zero;
+    uint8_t type_attr;
+    uint16_t offset_high;
+};
+offset_low和offset_high字段组成了中断处理程序在内存中的偏移地址，即IDT指向的中断处理程序的入口地址。它们共同组成了一个16位的中断处理程序地址，由于x86是基于小端字节序的，所以offset_low存储地址的低16位，offset_high存储地址的高16位。
+segment_selector字段指定了中断处理程序所在的代码段在GDT中的选择子（Selector）。在x86架构中，选择子是一个16位的值，由一个索引和特权级（即Ring）组成，它指向GDT中的一个段描述符，用于描述代码段或数据段的基地址、大小和属性等信息。
+type_attr字段指定了中断处理程序的类型和属性，包括中断类型、特权级、允许或禁止中断等属性。
+zero字段保留，未使用。
+
+Interrupt Gate是x86架构中的一种中断描述符类型，用于处理硬件中断或软件中断。它的属性字段（Type Attribute）的值为0x8E。在该类型的中断描述符中，中断处理程序被存储在内存中的某个位置，并且在触发中断时，CPU会自动跳转到该中断处理程序的入口地址，从而响应中断请求。
+
+中断门（Interrupt Gate）的类型和属性字段如下：
+
+0~3位：中断处理程序的偏移地址（Offset）低16位。
+4~15位：中断处理程序所在的代码段选择子（Segment Selector）。
+16~31位：保留字段，必须设置为0。
+32~35位：属性字段（Type Attribute），包括以下几个部分：
+32位：中断处理程序类型（D）。该位为0表示中断处理程序是16位的，为1表示中断处理程序是32位的。
+33~34位：特权级（Descriptor Privilege Level，DPL）。表示中断处理程序所在的代码段的特权级别，即中断处理程序的运行级别。它可以是0、1、2或3，其中0表示最高特权级，3表示最低特权级。在执行中断门时，CPU会检查中断处理程序的DPL和当前代码段的特权级别是否符合要求，如果不符合则会产生一个“通用保护故障”（General Protection Fault）异常。
+35位：允许中断（Present）。该位表示中断门是否存在，如果为1，则中断门有效，可以响应中断请求；如果为0，则中断门无效，不能响应中断请求。
+36~47位：中断处理程序的偏移地址（Offset）高16位。
+中断门是x86架构中用于响应中断请求的关键机制之一，它的作用是为每个中断请求设置一个中断处理程序，并且在发生中断时跳转到该中断处理程序的入口地址，从而完成中断处理的功能。
+
+__attribute__((packed))可以用于取消编译器的字节对齐操作，从而使用最小的字节对齐方式来压缩结构体的大小
+
+在IDT Entry的属性字段type_attr中，用一个8位的字节表示中断门的类型、特权级别和是否存在等信息。其中，前四位表示中断门的类型和特权级别，后四位表示一些其他属性。在这个例子中，desc->type_attr的值为0xEE，它的二进制形式为11101110，按位解析如下：
+
+0xE
+Bit 0：表示中断门是否存在，这里为1，表示存在。
+Bit 1-2：表示中断门的特权级别（DPL），这里为0b011，表示内核级别。
+Bit 3 保留位数
+Bit 4-8：表示中断门的类型，这里为0b1110，表示中断门类型。
+
+Offset: A 32-bit value, split in two parts. It represents the address of the entry point of the Interrupt Service Routine.
+Selector: A Segment Selector with multiple fields which must point to a valid code segment in your GDT.
+Gate Type: A 4-bit value which defines the type of gate this Interrupt Descriptor represents. There are five valid type values:
+0b0101 or 0x5: Task Gate, note that in this case, the Offset value is unused and should be set to zero.
+0b0110 or 0x6: 16-bit Interrupt Gate
+0b0111 or 0x7: 16-bit Trap Gate
+0b1110 or 0xE: 32-bit Interrupt Gate
+0b1111 or 0xF: 32-bit Trap Gate
+这有一个保留字段0
+DPL: A 2-bit value which defines the CPU Privilege Levels which are allowed to access this interrupt via the INT instruction. Hardware interrupts ignore this mechanism.
+P: Present bit. Must be set (1) for the descriptor to be valid.
