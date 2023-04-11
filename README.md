@@ -377,3 +377,27 @@ Gate Type: A 4-bit value which defines the type of gate this Interrupt Descripto
 这有一个保留字段0
 DPL: A 2-bit value which defines the CPU Privilege Levels which are allowed to access this interrupt via the INT instruction. Hardware interrupts ignore this mechanism.
 P: Present bit. Must be set (1) for the descriptor to be valid.
+
+insb:
+    push ebp
+    mov ebp, esp
+这两条指令将当前栈帧的 ebp 值压栈，并将 ebp 的值设置为当前栈顶地址。
+    xor eax, eax
+    mov edx, [ebp+8]
+    in al, dx
+这三条指令将0存入寄存器 eax，将 ebp+8 的值（即 insb 函数调用时的第一个参数）加载到寄存器 edx，然后从 dx 中读取1个字节的输入数据并存储到 al 寄存器中。
+    pop ebp
+    ret
+这两条指令将栈顶值赋值给 ebp，然后从栈顶弹出值，并将弹出的值作为返回地址跳转回调用 insb 函数的地方。
+insw同理不过将al 改为了ax
+outb:
+    push ebp
+    mov ebp, esp
+
+    mov eax, [ebp+12]
+    mov edx, [ebp+8]
+    out dx, al
+
+    pop ebp
+    ret
+    这段代码实现了 outb 函数，将 ebp+12 的值（即 outb 函数调用时的第二个参数）加载到 eax 寄存器中，将 ebp+8 的值（即 outb 函数调用时的第一个参数）加载到 edx 寄存器中，然后将 al 中的1个字节数据输出到 dx 端口。
