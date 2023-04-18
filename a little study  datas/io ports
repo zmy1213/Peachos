@@ -1,0 +1,111 @@
+
+         I/O Ports and Controllers on IBM Compatibles and PS/2
+----------------------------------------------------------------------------
+
+The following gives the input and output ports used by IBM PC compatible
+computers.  Most ports allow access to input and output device
+controllers.  A controller may have several internal registers which can
+be set to fix the operation of that controller, read its status, or send
+data to it.  Other ports access discrete logic latches or registers.
+Some ports are write-only or read-only.  It is even possible for a port
+to be write-only and read-only by using two different registers at the
+same port address.  Port addresses can range from 0 to 0FFFFH (64K
+ports). However, PC system boards generally reserve only the first 1024
+(0-3FFH). The AT and PS/2 freely employ ports above 3FFH for extended
+applications, such as the two port asynchronous adaptors and network
+adaptors.
+
+Ports from 0-0FFH have a special significance, since the 80x86 can use
+byte rather than word port addresses in the IN and OUT instructions.
+
+----------------------------------------------------------------------------
+  Port    Function and Chip Server (if present)
+----------------------------------------------------------------------------
+ 000-00F  DMA Direct Memory Access Processor 8237A-5 or equivalent
+ 010-01F  Extended DMA on PS/2 60-80
+ 020-021  Interrupt Generation 8259A Master Interrupt Processor
+ 030-03F  AT 8259 Master Interrupt Controller extended ports
+   040    System Timer 8253  Count Reg, Channel 0 System timer
+   042    Count Reg, Channel 2 Speaker audio
+   043    Control byte for channels 0 or 2
+   044    Extended Timer for PS/2 Count Reg, Channel 3 Watchdog timer
+   047    Control byte for channel 3
+ 050-05F  AT 8254 Timer
+ 060-063  PPI Status Port PPI 8255 Keyboard, PC read switches SW1, SW2
+   064    Extended PPI PS/2 8042 Keyboard, Aux. Device Controller
+ 070-071  AT and PS/2 CMOS ports RTC/CMOS MC146818 Clock and PS/2 NMI mask
+ 081-083  DMA Controller Registers 0-2
+   087    DMA Controller Register 3
+ 089-08B  DMA Controller Registers 4-6
+   08F    DMA Controller Register 7
+   090    Central Arbitration Control Port PS/2
+   091    Card Selection Feedback PS/2
+   092    System Control Port A on PS/2: Control and Status Register
+   094    Video System Setup on PS/2: Programmable Option Select (POS) Setup
+   095    PS/2 Reserved
+   096    POS Channel Select on PS/2: Program Option Select Adapter
+   0A0    PC NMI Mask Register on PC: Discrete latch for masking the NMI
+ 0A0-0A1  Slave Interrupts on AT, PS/2 8259A Slave Interrupt Controller
+ 0B0-0BF  AT 8259 Slave Interrupt Controller extended ports
+ 0C0-0DF  DMA Controller on PS/2 or Sound Generator on PCjr (0C0 port)
+ 0E0-0EF  AT reserved
+ 0F0-0FF  Math Coprocessor 80x87 on PS/2 or PCjr diskette controller
+ 100-107  Program Option Select on PS/2: POS Registers
+ 110-1EF  AT I/O options
+ 1F0-1F8  AT Fixed Disk Controller
+ 200-20F  Game I/O Ports, discrete logic (Active port: 201H)
+ 210-217  PC Expansion Unit
+   21F    AT reserved
+ 248-24F  Serial #8 option 8250 ACE
+ 268-26F  Serial #6 option 8250 ACE
+ 278-27F  Parallel Port LPT3: discrete logic
+ 2A2-2A3  Clock option: MSM58321RS Clock Chip
+ 2B0-2DF  Alternate EGA on PC and AT
+   2E1    AT GPIB Adapter 0
+ 2E2-2E3  AT Data Acquisition adapter 0
+
+ 2E8-2EF  Serial Port COM4: on PC 8250 ACE used with IRQ3
+ 2F8-2FF  Serial Port COM2: on PC and PS/2 ACE used with IRQ3
+ 300-31F  PC Prototype card on PC
+ 320-32F  XT Fixed disk Controller
+ 348-34F  Serial #7 option 8250 ACE
+ 368-36F  Serial #5 option 8250 ACE
+ 378-37F  Parallel Port LPT2: discrete logic parallel port
+ 380-38C  SBSI on PC, AT Secondary Binary Synchronous Interface
+ 3A0-3A9  PBSI on PC, AT Primary Binary Synchronous Interface
+   3B4    Monochrome Index Reg.   6845 Video Controller CRT Index Register
+   3B5    Monochrome Control Regs.6845 Video CRT Control Registers
+   3B8    Mono. Control Port      6845 CRT Control Port
+   3BA    Mono. Status/Feature    Input Status/Output Feature Control Reg.
+ 3BC-3BE  Parallel Port LPT1: discrete logic parallel port using IRQ7
+ 3C0-3C5  Video Subsystem         VGA Attribute and Sequencer Registers
+ 3C6-3C8  Video DAC               VGA Digital-to-Analog Converter
+ 3CE-3CF  Video Subsystem         VGA Graphics Registers
+   3D4    PC Color Graphics       6845 Video Controller CRT Index Register
+   3D5    PC Color Graphics       6845 Video CRT Control Registers
+   3DA    PC Color Status/Feature Input Status/Output Feature Control Reg.
+ 3E8-3EF  Serial Port COM3:on PC 8250 ACE used with IRQ3
+ 3F0-3F7  Diskette Controller 765 Chip
+ 3F8-3FF  Serial Port COM1: on  PC and PS/2 ACE used with IRQ4
+ 6E2-6E3  AT Data Acquisition Adapter 1
+ 790-793  Cluster Adapter 1
+ AE2-AE3  AT Data Acquisition Adapter 2
+ B90-B93  Cluster Adapter 2
+ EE2-EE3  AT Data Acquisition Adapter 3
+ B90-B93  Cluster Adapter 3
+  22E1    AT GPIB Adapter 1
+2390-2393 Cluster Adapter 4
+  42E1    AT GPIB Adapter 2
+  3220    Serial Port COM3:   PS/2 Asychronous Adaptor
+  3228    Serial Port COM4:   PS/2 Asychronous Adaptor
+  4220    Serial Port COM5:   PS/2 Asychronous Adaptor
+  4228    Serial Port COM6:   PS/2 Asychronous Adaptor
+  42E1    AT GPIB Adapter 2
+  5220    Serial Port COM7:   PS/2 Asychronous Adaptor
+  5228    Serial Port COM8:   PS/2 Asychronous Adaptor
+  62E1    AT GPIB Adapter 3
+  82E1    AT GPIB Adapter 4
+  A2E1    AT GPIB Adapter 5
+  C2E1    AT GPIB Adapter 6
+  E2E1    AT GPIB Adapter 7
+----------------------------------------------

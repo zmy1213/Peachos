@@ -5,7 +5,22 @@
         "kernel.h": "c",
         "stdint.h": "c",
         "semaphore.h": "c",
-        "heap.h": "c"
+        "heap.h": "c",
+        "kheap.h": "c",
+        "status.h": "c",
+        "stdbool.h": "c",
+        "*.tcc": "c",
+        "cmath": "c",
+        "random": "c",
+        "functional": "c",
+        "limits": "c",
+        "type_traits": "c",
+        "atomic": "c",
+        "unordered_map": "c",
+        "fstream": "c",
+        "optional": "c",
+        "ranges": "c",
+        "tuple": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
