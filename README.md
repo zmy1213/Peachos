@@ -317,6 +317,7 @@ break kernel_main
 
 0xB800是显示器输出的地方，有两个字节第一个是输出的ascll，第二个是颜色、
 
+IDT
 中断描述符表（Interrupt Descriptor Table，简称IDT）和中断向量表（Interrupt Vector Table，简称IVT）是操作系统中用于处理中断的重要数据结构。
 
 IDT是在系统启动时由操作系统初始化的，它包含了处理器能够识别和响应的所有中断类型的描述符。每个中断类型对应一个描述符，该描述符中包含了处理该中断的处理程序的入口地址等相关信息。
@@ -407,3 +408,61 @@ outb:
 8259A的作用是负责所有外来设备的中断，其中就包括来自时钟的中断，以后我们要通过它完成进程调度。
 
 
+HEAP 
+c programing language 
+char *ptr = (char*)(0x100000);
+
+memory limits for a 32 bit kernel
+allow us to malloc arrdess to a maximum of 4.29GB
+
+32 bit in operating system  is byte so the memory is 2^35  
+
+memory of an uninitialized system
+video memory takes up portions of ram
+hardware memorry takes up pinters of ram
+unused parts of ram are available for use
+note that :0xc0000000 is reserved this means memory array we have at 0x1000000 can give us a maximum of 3.22gb for a machine with 4gb or gigher installed
+
+heap 
+can be  pointed at an address by hardware that is also big enough for us to use
+the heap data size can be defined for example 100MB of heap memory
+so long as we have 100MB of memory available  our heap will work fine
+we need will be responsible for storig information in our kernel
+the heap implementation will be responsible for managinng this giant memory that we call the heap
+
+simplest possible heap implemention
+start with a sstart address and call it a current address point it somewhere free i.e(0x1000000) 
+any call to malloc gets the current address stores it in a temporary varible called tmp
+now the current address is incremented by the size provided to malloc
+temporary varible called tmp that contains the allocated address is returned 
+current_arress now contains the next address for malloc to return when malloc is called again 
+
+这种实现方式非常简单，但也有一些缺点，例如不能回收已分配的内存，也没有考虑内存碎片问题。
+
+heap implemention 
+will consist of a gaint table which describles againts piece of free memory in the system .this table will describle which memory is taken,which memory is free and so on.we will call this the entry table
+
+will have another pointer to a giant piece of free memory this will be the actual heap data its self that users of malloc can use.we will call this data pool if our heap can allocate 100MB of ram then the heap data pool will be 100MB in size
+
+our heap imolementation will be block based each address returne from malloc will be aligned to 4096 in size
+
+the entry table
+composed of an array of 1 byte values that represent an entryin our heap data pool
+
+array size is calculated  by taking the hep data pool size and dividing it by our block size of 4096 bytes
+
+100MB /4096 = 25600 bytes
+
+the entry structure 
+HAS_N IS_FIRST 0 0 ET_3 ET_2 ET_1 ET_0
+HAS_N set if the entry to the right of us is part of our allocation
+is_first set if is the first entry of our allocation
+
+entry types 
+heap_block_table_entry_taken the entry is taken  and the address cannot be used
+heap_block_table_entry_free
+the entry is free and may be used
+
+malloc step1 finding the total blocks
+step2 find two free blocks in the table
+step3 calculating the absolute address thr programing can use
