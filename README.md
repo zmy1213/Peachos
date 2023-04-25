@@ -466,3 +466,18 @@ the entry is free and may be used
 malloc step1 finding the total blocks
 step2 find two free blocks in the table
 step3 calculating the absolute address thr programing can use
+
+
+paging directory entry 
+the bits of entry between 11 and  31 is page table 4 kb aligned address
+PAT（Page Attribute Table）：如果系统支持PAT，则此位用于指示内存缓存类型；否则，保留且必须设置为0。
+G（Global）：告诉处理器不要在MOV CR3指令时失效与页面对应的TLB条目。CR4的第7位（PGE）必须设置才能启用全局页面。
+PS（Page Size）：存储特定页表项所对应的页的大小。如果该位被设置，则PDE映射到一个大小为4 MiB的页；否则，映射到一个4 KiB的页表。请注意，4 MiB的页面需要启用PSE。
+D（Dirty）：用于确定页面是否被写入。
+A（Accessed）：用于发现在虚拟地址转换期间是否读取了PDE或PTE。如果已经读取，则设置该位；否则，不设置。请注意，CPU不会清除此位，因此如果操作系统需要此位，则需要操作系统清除该位。
+PCD（Cache Disable）：如果该位被设置，则该页不会被缓存；否则，该页将被缓存。
+PWT（Page Write-Through）：控制页面的写入方式。如果该位被设置，则启用写入穿透缓存；如果没有设置，则启用写回缓存。
+U/S（User/Supervisor）：控制根据特权级别访问页面的权限。如果该位被设置，则所有人都可以访问页面；如果未设置，则仅监管者可以访问。对于一个页面目录项，用户位控制所有由页面目录项引用的页面的访问。因此，如果要将页面设置为用户页面，则必须在相关页面目录项和页面表项中设置用户位。
+R/W（Read/Write）：控制页面的读/写权限标志。如果该位被设置，则页面是可读/写的。否则，如果未设置，则页面是只读的。CR0中的WP位决定是否仅应用于用户空间，始终为内核提供写访问权限（默认情况下），或同时为用户空间和内核提供写访问权限。
+P（Present）：如果该位被设置，则页面实际上在物理内存中；例如，当页面被交换出时，它不在物理内存中，因此不是“存在”的。如果调用了一个未“存在”的页面，则会发生页错误，操作系统应该处理它。
+

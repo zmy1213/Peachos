@@ -20,7 +20,8 @@
         "fstream": "c",
         "optional": "c",
         "ranges": "c",
-        "tuple": "c"
+        "tuple": "c",
+        "paging.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

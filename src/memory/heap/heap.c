@@ -22,6 +22,23 @@ static bool heap_validate_alignment(void*ptr)
 {
     return ((unsigned int )ptr % PEACHOS_HEAP_BLOCK_SIZE) == 0;
 }
+void heap_mark_blocks_free(struct heap* heap, int starting_block)
+{
+    struct heap_table* table = heap->table;
+    for (int i = starting_block; i < (int)table->total; i++)
+    {
+        HEAP_BLOCK_TABLE_ENTRY entry = table->entries[i];
+        table->entries[i] = HEAP_BLOCK_TABLE_ENTRY_FREE;
+        if (!(entry & HEAP_BLOCK_HAS_NEXT))
+        {
+            break;
+        }
+    }
+}
+int heap_address_to_block(struct heap* heap, void* address)
+{
+    return ((int)(address - heap->saddr)) / PEACHOS_HEAP_BLOCK_SIZE;
+}
 
 int heap_create(struct heap*heap,void*ptr,void*end,struct heap_table*table)
 {
@@ -143,7 +160,7 @@ void *heap_malloc(struct heap*heap,size_t size)
     return heap_malloc_blocks(heap,total_blocks);
 }
 
-void *heap_free(struct heap *heap,void*ptr)
+void heap_free(struct heap *heap,void*ptr)
 {
-    return 0;
+     heap_mark_blocks_free(heap, heap_address_to_block(heap, ptr));
 }
