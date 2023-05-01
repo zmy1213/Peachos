@@ -467,6 +467,7 @@ malloc step1 finding the total blocks
 step2 find two free blocks in the table
 step3 calculating the absolute address thr programing can use
 
+picture which discrebs paging bit information in detail
 
 paging directory entry 
 the bits of entry between 11 and  31 is page table 4 kb aligned address
@@ -480,4 +481,7 @@ PWT（Page Write-Through）：控制页面的写入方式。如果该位被设�
 U/S（User/Supervisor）：控制根据特权级别访问页面的权限。如果该位被设置，则所有人都可以访问页面；如果未设置，则仅监管者可以访问。对于一个页面目录项，用户位控制所有由页面目录项引用的页面的访问。因此，如果要将页面设置为用户页面，则必须在相关页面目录项和页面表项中设置用户位。
 R/W（Read/Write）：控制页面的读/写权限标志。如果该位被设置，则页面是可读/写的。否则，如果未设置，则页面是只读的。CR0中的WP位决定是否仅应用于用户空间，始终为内核提供写访问权限（默认情况下），或同时为用户空间和内核提供写访问权限。
 P（Present）：如果该位被设置，则页面实际上在物理内存中；例如，当页面被交换出时，它不在物理内存中，因此不是“存在”的。如果调用了一个未“存在”的页面，则会发生页错误，操作系统应该处理它。
+
+
+在x86架构中，CR3是一个控制寄存器，用于存储分页机制的页目录表的地址。在操作系统中，需要使用该控制寄存器来实现虚拟内存到物理内存的映射。
 

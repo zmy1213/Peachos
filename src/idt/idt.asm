@@ -8,6 +8,7 @@ global  no_interrupt
 idt_load:
     push ebp
     mov ebp,esp
+
     mov ebx,[ebp+8]
     lidt [ebx]
     pop ebp
@@ -22,9 +23,7 @@ int21h:
     iret
  
 no_interrupt:
-    cli 
     pushad
     call no_interrupt_handler
     popad
-    sti 
     iret
