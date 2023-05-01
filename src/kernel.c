@@ -3,8 +3,10 @@
 #include <stddef.h>
 #include "idt/idt.h"
 #include "memory/heap/kheap.h"
+#include "disk/disk.h"
 #include "io/io.h"
 #include "memory/paging/paging.h"
+#include "kernel.h"
 uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
 uint16_t terminal_col = 0;
@@ -79,14 +81,8 @@ void kernel_main()
     kernel_chunk = paging_new_4gb(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
     paging_switch(kernel_chunk);
 
-    char * ptr = kzalloc(4096);
-    paging_set(paging_4gb_chunk_get_directory(kernel_chunk),(void*)0x1000,(uint32_t)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT |PAGING_IS_WRITEABLE);
-    char *ptr2  = (char*)0x1000;
     enable_paging();
-    ptr2[0] = 'A';
-    ptr2[1] = 'B';
+    char buf[512];
+    disk_read_sector(0,1,buf);
     
-    print(ptr2);
-    print(ptr);
-   
 }

@@ -21,7 +21,10 @@
         "optional": "c",
         "ranges": "c",
         "tuple": "c",
-        "paging.h": "c"
+        "paging.h": "c",
+        "io.h": "c",
+        "idt.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "github-enterprise.uri": "https://ghproxy.com"
 }
