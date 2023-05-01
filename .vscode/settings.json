@@ -26,5 +26,6 @@
         "idt.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
-    "github-enterprise.uri": "https://ghproxy.com"
+    "github-enterprise.uri": "https://ghproxy.com",
+    "cmake.configureOnOpen": true
 }
