@@ -485,3 +485,14 @@ P（Present）：如果该位被设置，则页面实际上在物理内存中；
 
 在x86架构中，CR3是一个控制寄存器，用于存储分页机制的页目录表的地址。在操作系统中，需要使用该控制寄存器来实现虚拟内存到物理内存的映射。
 
+hard port
+I/O端口号	端口用途	端口位数
+主控制器	从控制器	读取操作	写入操作
+0x1f0	0x170	Data	Data	16
+0x1f1	0x171	Error	Features	8
+0x1f2	0x172	Sector count	Sector count	8
+0x1f3	0x173	LBA low	LBA low	8
+0x1f4	0x174	LBA mid	LBA mid	8
+0x1f5	0x175	LBA high	LBA high	8
+0x1f6	0x176	Device	Device	8
+0x1f7	0x177	Status	Command	8
