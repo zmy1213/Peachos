@@ -23,7 +23,10 @@
         "tuple": "c",
         "paging.h": "c",
         "io.h": "c",
-        "idt.h": "c"
+        "idt.h": "c",
+        "string.h": "c",
+        "algorithm": "c",
+        "stringos.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "github-enterprise.uri": "https://ghproxy.com",
