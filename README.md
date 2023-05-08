@@ -496,3 +496,4 @@ I/O端口号	端口用途	端口位数
 0x1f5	0x175	LBA high	LBA high	8
 0x1f6	0x176	Device	Device	8
 0x1f7	0x177	Status	Command	8
+
