@@ -75,14 +75,18 @@ void kernel_main()
 {
     terminal_initialize();
     print("Hello World!\nTest");
-    print("123\n");
+    
     kheap_init();
+
+    disk_search_and_init();
+    
     idt_init();
+    
     kernel_chunk = paging_new_4gb(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+    
     paging_switch(kernel_chunk);
 
     enable_paging();
-    char buf[512];
-    disk_read_sector(0,1,buf);
     
+    enable_interrupts();
 }
