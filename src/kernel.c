@@ -7,6 +7,8 @@
 #include "io/io.h"
 #include "memory/paging/paging.h"
 #include "kernel.h"
+#include "fs/pparser.h"
+#include "disk/streamer.h"
 uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
 uint16_t terminal_col = 0;
@@ -89,4 +91,10 @@ void kernel_main()
     enable_paging();
     
     enable_interrupts();
+
+    struct disk_stream* stream = diskstreamer_new(0);
+    unsigned char c = 0;
+    diskstreamer_seek(stream,0x201);
+    diskstreamer_read(stream,&c,1); 
+    while(1){}
 }

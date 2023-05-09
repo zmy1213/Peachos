@@ -42,7 +42,7 @@ void disk_search_and_init()
 
 struct disk *disk_get(int index)
 {
-    if(index==0)
+    if(index!=0)
         return 0;
     
     return &disk;
