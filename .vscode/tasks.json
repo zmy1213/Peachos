@@ -3,7 +3,7 @@
         {
             "type": "cppbuild",
             "label": "C/C++: gcc 生成活动文件",
-            "command": "/usr/local/bin/gcc",
+            "command": "cd $dir && clisp $fileName && clisp $fileNameWithoutExt",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",

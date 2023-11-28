@@ -497,3 +497,26 @@ I/O端口号	端口用途	端口位数
 0x1f6	0x176	Device	Device	8
 0x1f7	0x177	Status	Command	8
 
+文件系统信息
+OEMIdentifier       db 'PEACHOS'      ; 文件系统标识
+BytesPerSector      dw 0x200          ; 每个扇区的字节数
+SectorsPerCluster   db 0x80           ; 每个簇的扇区数
+ReservedSectors     dw 200             ; 保留扇区数
+FATCopies           db 0x02           ; FAT 表的拷贝数
+RootDirEntries      dw 0x40           ; 根目录条目数
+NumSectors          dw 0x00           ; 扇区总数
+MediaType           db 0xF8           ; 媒体类型
+SectorsPerFat       dw 0x100          ; 每个 FAT 表的扇区数
+SectorsPerTrack     dw 0x20           ; 每个磁道的扇区数
+Number0fHeads       dw 0x40           ; 磁头数
+HiddenSectors       dd 0x00           ; 隐藏扇区数
+SectorsBig          dd 0x773594        ; 大扇区数
+驱动器信息
+DriveNumber         db 0x80           ; 驱动器号
+WinNTBit            db 0x00           ; WinNT 比特
+Signature           db 0x29           ; 特征标识
+VolumeID            dd 0xD105         ; 卷标 ID
+卷标和系统信息字符串：
+VolumeIDString      db "PEACHOS BOO"   ; 卷标字符串
+SystemIDString      db "FAT16 "        ; 文件系统类型字符串
+
