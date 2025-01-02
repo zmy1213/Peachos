@@ -6,11 +6,17 @@ all:./bin/boot.bin ./bin/kernel.bin
 	dd if=./bin/boot.bin >> ./bin/os.bin 
 	dd if=./bin/kernel.bin >> ./bin/os.bin
 	dd if=/dev/zero bs=1048576 count=16 >> ./bin/os.bin
+	
+#mount file system
+	hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount ./bin/os.bin 
+	sudo mount -t msdos /dev/disk4 /mnt/d   
+	cp /Users/zhuzhumingyang/Desktop/test1.txt /mnt/d
+	hdiutil detach /dev/disk4 
 
 ./bin/kernel.bin :$(FILES)
 	i686-elf-ld -g -relocatable $(FILES) -o ./build/kernelfull.o
 	i686-elf-gcc -T ./src/linker.ld -o ./bin/kernel.bin -ffreestanding -O0 -nostdlib ./build/kernelfull.o
-./bin/boot.bin: ./src/b oot/boot.asm
+./bin/boot.bin: ./src/boot/boot.asm
 	nasm -f bin ./src/boot/boot.asm -o ./bin/boot.bin
 
 ./build/kernel.asm.o: ./src/kernel.asm
