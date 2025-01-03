@@ -1,6 +1,6 @@
 #ifndef DISK_H
 #define DISK_H
-
+#include "fs/file.h"
 
 typedef unsigned int PEACHOS_DISK_TYPE;
 
@@ -8,8 +8,11 @@ typedef unsigned int PEACHOS_DISK_TYPE;
 
 struct disk
 {
-    PEACHOS_DISK_TYPE type;
-    int sector_size;
+    PEACHOS_DISK_TYPE type;//磁盘类型
+    int sector_size;//扇区大小
+    int id;//磁盘编号
+    struct filesystem* filesystem;//文件系统
+    void* fs_private;//文件系统私有数据
 };
 int disk_read_sector(int lba,int total,void*buf);
 void disk_search_and_init();

@@ -8,7 +8,9 @@
 #include "memory/paging/paging.h"
 #include "kernel.h"
 #include "fs/pparser.h"
+#include "fs/file.h"
 #include "disk/streamer.h"
+#include "stringos/stringos.h"
 uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
 uint16_t terminal_col = 0;
@@ -52,16 +54,6 @@ void terminal_initialize()
         }
     }   
 }
-size_t strlen(const char * c)
-{
-    size_t len = 0;
-    while(c[len])
-    {
-        ++len;
-    }
-    return len;
-}
-
 void print(const char* str)
 {
     
@@ -80,6 +72,8 @@ void kernel_main()
     
     kheap_init();
 
+    fs_init();
+
     disk_search_and_init();
     
     idt_init();
@@ -92,9 +86,23 @@ void kernel_main()
     
     enable_interrupts();
 
-    struct disk_stream* stream = diskstreamer_new(0);
-    unsigned char c = 0;
-    diskstreamer_seek(stream,0x201);
-    diskstreamer_read(stream,&c,1); 
+    // struct disk_stream* stream = diskstreamer_new(0);
+    // unsigned char c = 0;
+
+    // diskstreamer_seek(stream,0x201);
+    
+    // diskstreamer_read(stream,&c,1); 
+
+    // char buf[20];
+    // strcpy(buf,"Hello World!");
+
+    int fd = fopen("0:/test.txt","r");
+    if(fd)
+    {
+        print("open test1.txt successfull");
+    }else{
+        print("sorry open failed");
+    }
+
     while(1){}
 }

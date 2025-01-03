@@ -3,8 +3,8 @@
 
 struct path_root
 {
-    int drive_no;
-    struct path_part *first;
+    int drive_no;//
+    struct path_part *first;//
 };
 
 struct path_part

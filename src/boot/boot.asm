@@ -3,7 +3,7 @@ BITS 16
 
 CODE_SEG equ gdt_code-gdt_start
 DATA_SEG equ gdt_data-gdt_start
- jmp short start
+jmp short start
 nop
 
 
