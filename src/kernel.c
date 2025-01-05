@@ -96,12 +96,13 @@ void kernel_main()
     // char buf[20];
     // strcpy(buf,"Hello World!");
 
-    int fd = fopen("0:/test.txt","r");
+    int fd = fopen("0:/test1.txt","r");
     if(fd)
     {
         print("open test1.txt successfull");
-    }else{
-        print("sorry open failed");
+        char buf[512];
+        fread(buf,512,1,fd);
+        print(buf);
     }
 
     while(1){}

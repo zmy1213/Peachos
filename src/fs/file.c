@@ -201,5 +201,25 @@ out:
 
     return res;
 }
+int fread(void *ptr, size_t size, size_t nmemb, int fd)
+{
+   
+    int res = 0;
+    if (size == 0 || nmemb == 0 || fd < 1)
+    {
+        res = -EINVAGR;
+        goto out;
+    }
 
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc)
+    {
+        res = -EINVAGR;
+        goto out;
+    }
+
+    res = desc->filesystem->read(desc->disk, desc->private, size, nmemb, (char*) ptr);
+out:
+    return res;
+}
 

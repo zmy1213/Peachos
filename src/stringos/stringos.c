@@ -46,7 +46,7 @@ int strnlen_terminator(const char* str, int max, char terminator)
     return i;
 }
 
-int istrncmp(const char* s1, const char* s2, int n)
+int istrncmp(const char* s1, const char* s2, int n)//  
 {
     unsigned char u1, u2;
     while(n-- > 0)

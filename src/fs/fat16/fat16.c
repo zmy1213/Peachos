@@ -99,7 +99,7 @@ struct fat_item
 
 struct fat_file_descriptor
 {
-    struct fat_item *item;
+    struct fat_item *item;//文件项
     uint32_t pos;
 };
 
@@ -119,14 +119,15 @@ struct fat_private
 
 typedef void* (*FS_OPEN_FUNCTION)(struct disk *disk,struct path_part * path, FILE_MODE mode);
 typedef int(*FS_RESOLVE_FUNCTION)(struct disk *disk);
-
+typedef int (*FS_READ_FUNCTION)(struct disk *disk,void* private ,uint32_t size,uint32_t nmemb,char *out);
 
 int fat16_resolve(struct disk *disk);
 void *fat16_open(struct disk *disk, struct path_part *path, FILE_MODE mode);
-
+int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr);
 struct filesystem fat16_fs ={
         .resolve = fat16_resolve,
-        .open = fat16_open
+        .open = fat16_open,
+        .read = fat16_read
 };
 struct filesystem * fat16_init()
 {
@@ -141,8 +142,6 @@ static void fat16_init_private(struct fat_private *private, struct disk *disk)
     private->fat_read_stream = diskstreamer_new(disk->id);
     private->directory_stream = diskstreamer_new(disk->id);
 }
-
-
 
 int fat16_sector_to_absolute(struct disk *disk, int sector)
 {
@@ -356,7 +355,7 @@ static uint32_t fat16_get_first_fat_sector(struct fat_private *private)
     return private->header.primary_header.reserved_sectors;
 }
 
-static int fat16_get_fat_entry(struct disk *disk, int cluster)
+static int fat16_get_fat_entry(struct disk *disk, int cluster)//获取FAT表项
 {
     int res = -1;
     struct fat_private *private = disk->fs_private;
@@ -396,8 +395,8 @@ static int fat16_get_cluster_for_offset(struct disk *disk, int starting_cluster,
     int clusters_ahead = offset / size_of_cluster_bytes;
     for (int i = 0; i < clusters_ahead; i++)
     {
-        int entry = fat16_get_fat_entry(disk, cluster_to_use);
-        if (entry == 0xFFf8 || entry == 0xFFFF)
+        int entry = fat16_get_fat_entry(disk, cluster_to_use);//获取FAT表项
+        if (entry == 0xFFf8 || entry == 0xFFFF)//文件结束
         {
             // We are at the last entry in the file
             res = -EIO;
@@ -418,20 +417,21 @@ static int fat16_get_cluster_for_offset(struct disk *disk, int starting_cluster,
             goto out;
         }
 
-        if (entry == 0x00)
+        if (entry == 0x00)//end
         {
             res = -EIO;
             goto out;
         }
 
-        cluster_to_use = entry;
+        cluster_to_use = entry;//
     }
 
-    res = cluster_to_use;
+    res = cluster_to_use;//返回簇号
 out:
     return res;
 }
-static int fat16_read_internal_from_stream(struct disk *disk, struct disk_stream *stream, int cluster, int offset, int total, void *out)
+
+static int fat16_read_internal_from_stream(struct disk *disk, struct disk_stream *stream, int cluster, int offset, int total, void *out)//从流中读取数据
 {
     int res = 0;
     struct fat_private *private = disk->fs_private;
@@ -650,4 +650,26 @@ err_out:
         kfree(descriptor);
 
     return ERROR(err_code);
+}
+int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr)
+{
+    int res = 0;
+    struct fat_file_descriptor *fat_desc = descriptor;
+    struct fat_directory_item *item = fat_desc->item->item;
+    int offset = fat_desc->pos;
+    for (uint32_t i = 0; i < nmemb; i++)
+    {
+        res = fat16_read_internal(disk, fat16_get_first_cluster(item), offset, size, out_ptr);
+        if (ISERR(res))
+        {
+            goto out;
+        }
+
+        out_ptr += size;
+        offset += size;
+    }
+    fat_desc->pos = offset;
+    res = nmemb;
+out:
+    return res;
 }
