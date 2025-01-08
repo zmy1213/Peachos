@@ -24,7 +24,6 @@ static struct filesystem** fs_get_free_filesystem()
     return NULL;
 }
 
-
 void fs_insert_filesystem(struct filesystem* filesystem)
 {
     struct filesystem** fs= fs_get_free_filesystem();
@@ -46,11 +45,13 @@ void fs_load()
     memset(filesystems, 0, sizeof(filesystems));
     fs_static_load();
 }
+
 void fs_init()
 {
     memset(file_descriptors, 0, sizeof(file_descriptors));
     fs_load();
 }
+
 static int file_new_descriptor(struct file_descriptor** desc_out)//return the index of the new file descriptor
 {
     int res = -ENOMEM;
@@ -68,6 +69,13 @@ static int file_new_descriptor(struct file_descriptor** desc_out)//return the in
     }
     return res;
 }
+
+static void file_free_descriptor(struct file_descriptor* desc)
+{
+    file_descriptors[desc->index-1] = 0x00;
+    kfree(desc);
+}
+
 
 static struct file_descriptor* file_get_descriptor(int fd)
 {
@@ -109,6 +117,21 @@ FILE_MODE file_get_mode_by_string(const char* str)
         mode = FILE_MODE_APPEND;
     }
     return mode;
+}
+
+int fstat(int fd, struct file_stat* stat)
+{
+    int res = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc)
+    {
+        res = -EIO;
+        goto out;
+    }
+
+    res = desc->filesystem->stat(desc->disk, desc->private, stat);
+out:
+    return res;
 }
 
 int fopen(const char* filename, const char* mode_str)
@@ -175,32 +198,67 @@ out:
 
     if (res < 0)
     {
-        // // ERROR
-        // if (root_path)
-        // {
-        //     pathparser_free(root_path);
-        //     root_path = NULL;
-        // }
+        // ERROR
+        if (root_path)
+        {
+            pathparser_free(root_path);
+            root_path = NULL;
+        }
 
-        // if (disk && descriptor_private_data)
-        // {
-        //     disk->filesystem->close(descriptor_private_data);
-        //     descriptor_private_data = NULL;
-        // }
+        if (disk && descriptor_private_data)
+        {
+            disk->filesystem->close(descriptor_private_data);
+            descriptor_private_data = NULL;
+        }
 
-        // if (desc)
-        // {
-        //     file_free_descriptor(desc);
-        //     desc = NULL;
-        // }
+        if (desc)
+        {
+            file_free_descriptor(desc);
+            desc = NULL;
+        }
 
 
-        // fopen shouldnt return negative values
+        //fopen shouldnt return negative values
         res = 0;
     }
 
     return res;
 }
+
+int fseek(int fd, int offset, FILE_SEEK_MODE whence)
+{
+    int res = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc)
+    {
+        res = -EIO;
+        goto out;
+    }
+
+    res = desc->filesystem->seek(desc->private, offset, whence);
+out:
+    return res;
+}
+
+int fclose(int fd)
+{
+    int res = 0;
+    struct file_descriptor* desc = file_get_descriptor(fd);
+    if (!desc)
+    {
+        res = -EIO;
+        goto out;
+    }
+
+    res = desc->filesystem->close(desc->private);
+    if(res==PEACHOS_ALL_OK)
+    {
+        file_free_descriptor(desc);
+    }
+out:
+    return res;
+}
+
 int fread(void *ptr, size_t size, size_t nmemb, int fd)
 {
    
@@ -222,4 +280,3 @@ int fread(void *ptr, size_t size, size_t nmemb, int fd)
 out:
     return res;
 }
-

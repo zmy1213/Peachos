@@ -15,6 +15,15 @@ uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
 uint16_t terminal_col = 0;
 
+
+static struct paging_4gb_chunk* kernel_chunk = 0;
+
+void panic(const char* msg)
+{
+    print(msg);
+    while(1) {}
+}
+
 uint16_t terminal_make_char(char c, char colour)
 {
     return (colour << 8) | c;
@@ -24,7 +33,6 @@ void terminal_putchar(int x, int y, char c, char colour)
 {
     video_mem[(y * VGA_WIDTH) + x] = terminal_make_char(c, colour);
 }
-
 void terminal_writechar(char c, char colour)
 {
     if (c == '\n')
@@ -68,7 +76,9 @@ static struct paging_4gb_chunk *kernel_chunk =0;
 void kernel_main()
 {
     terminal_initialize();
-    print("Hello World!\nTest");
+    print("Hello World!\nTest\n");
+
+    //panic("The system cannot continue error\n");
     
     kheap_init();
 
@@ -99,11 +109,13 @@ void kernel_main()
     int fd = fopen("0:/test1.txt","r");
     if(fd)
     {
-        print("open test1.txt successfull");
-        char buf[512];
-        fread(buf,512,1,fd);
+        print("open test1.txt successfull\n");
+        char buf[14];
+        fseek(fd,3,SEEK_SET);
+        fread(buf,11,1,fd);
+        buf[13] = 0x00;
         print(buf);
+        fclose(fd);
     }
-
     while(1){}
 }

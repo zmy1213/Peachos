@@ -28,8 +28,8 @@ typedef unsigned int FAT_ITEM_TYPE;
 
 struct fat_header_extended
 {
-    uint8_t drive_number;//
-    uint8_t win_nt_bit;//
+    uint8_t drive_number;//驱动器号
+    uint8_t win_nt_bit;//win nt位
     uint8_t signature;
     uint32_t volume_id;
     uint8_t volume_id_string[11];
@@ -79,40 +79,39 @@ struct fat_directory_item {
     uint32_t filesize;                    // 文件大小（4字节）
 } __attribute__((packed));
 
-struct fat_directory
+struct fat_directory//目录
 {
-    struct fat_directory_item *item;
-    int total;
-    int sector_pos;
-    int ending_sector_pos;
+    struct fat_directory_item *item;//目录项
+    int total;//    目录项数量
+    int sector_pos;//目录起始扇区
+    int ending_sector_pos;//目录结束扇区
 };
 
 struct fat_item
 {
     union {
-        struct fat_directory_item *item;
-        struct fat_directory *directory;
-    };
+        struct fat_directory_item *item;//文件项
+        struct fat_directory *directory;//目录项
+    };//文件或目录
 
-    FAT_ITEM_TYPE type;
+    FAT_ITEM_TYPE type;//文件类型
 };
 
 struct fat_file_descriptor
 {
     struct fat_item *item;//文件项
-    uint32_t pos;
+    uint32_t pos;//`
 };
 
 struct fat_private
 {
-    struct fat_h header;
-    struct fat_directory root_directory;
+    struct fat_h header;//FAT16头
+    struct fat_directory root_directory;//根目录
 
     // Used to stream data clusters
     struct disk_stream *cluster_read_stream;
     // Used to stream the file allocation table
     struct disk_stream *fat_read_stream;
-
     // Used in situations where we stream the directory
     struct disk_stream *directory_stream;
 };
@@ -120,15 +119,22 @@ struct fat_private
 typedef void* (*FS_OPEN_FUNCTION)(struct disk *disk,struct path_part * path, FILE_MODE mode);
 typedef int(*FS_RESOLVE_FUNCTION)(struct disk *disk);
 typedef int (*FS_READ_FUNCTION)(struct disk *disk,void* private ,uint32_t size,uint32_t nmemb,char *out);
+typedef int (*FS_SEEK_FUNCTION)(void *private,uint32_t offset,FILE_SEEK_MODE seek_mode);
+typedef int (*FS_STAT_FUNCTION)(struct disk* disk, void* private, struct file_stat* stat);
 
 int fat16_resolve(struct disk *disk);
 void *fat16_open(struct disk *disk, struct path_part *path, FILE_MODE mode);
 int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr);
+int fat16_seek(void *private, uint32_t offset, FILE_SEEK_MODE seek_mode);
+int fat16_stat(struct disk *disk, void *private, struct file_stat *stat);
+
 struct filesystem fat16_fs ={
         .resolve = fat16_resolve,
         .open = fat16_open,
-        .read = fat16_read
-};
+        .read = fat16_read,
+        .seek = fat16_seek,
+        .stat = fat16_stat,
+};//FAT16文件系统 vfs 安装文件系统
 struct filesystem * fat16_init()
 {
     strcpy(fat16_fs.name,"FAT16");
@@ -147,6 +153,7 @@ int fat16_sector_to_absolute(struct disk *disk, int sector)
 {
     return sector * disk->sector_size;
 }
+
 int fat16_get_total_items_for_directory(struct disk *disk, uint32_t directory_start_sector)//获取目录项总数
 {
     struct fat_directory_item item;
@@ -198,7 +205,7 @@ int fat16_get_root_directory(struct disk *disk, struct fat_private *fat_private,
 {
     int res = 0;
     struct fat_directory_item *dir = 0x00;
-    struct fat_header *primary_header = &fat_private->header.primary_header;
+    struct fat_header *primary_header = &fat_private->header.primary_header;//
     int root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;//根目录扇区位置 = FAT数*每个FAT扇区数+保留扇区数
     int root_dir_entries = fat_private->header.primary_header.root_dir_entries;//根目录项数
     int root_dir_size = (root_dir_entries * sizeof(struct fat_directory_item));//根目录大小
@@ -248,7 +255,6 @@ err_out:
 
 int fat16_resolve(struct disk *disk)
 {
-    print("fat16");
     int res = 0;
     struct fat_private *fat_private = kzalloc(sizeof(struct fat_private));
     fat16_init_private(fat_private, disk);
@@ -267,7 +273,7 @@ int fat16_resolve(struct disk *disk)
         res = -EIO;
         goto out;
     }
-    if(fat_private->header.shared.extended_header.signature != 0x29)
+    if(fat_private->header.shared.extended_header.signature != 0x29)//
     {
         res = -EFSNOTUS;
         goto out;
@@ -551,7 +557,7 @@ out:
     return directory;
 }
 
-struct fat_item *fat16_new_fat_item_for_directory_item(struct disk *disk, struct fat_directory_item *item)
+struct fat_item *fat16_new_fat_item_for_directory_item(struct disk *disk, struct fat_directory_item *item)//
 {
     struct fat_item *f_item = kzalloc(sizeof(struct fat_item));
     if (!f_item)
@@ -588,8 +594,7 @@ struct fat_item *fat16_find_item_in_directory(struct disk *disk, struct fat_dire
     return f_item;
 }
 
-
-struct fat_item *fat16_get_directory_entry(struct disk *disk, struct path_part *path)
+struct fat_item *fat16_get_directory_entry(struct disk *disk, struct path_part *path)//
 {
     struct fat_private *fat_private = disk->fs_private;
     struct fat_item *current_item = 0;
@@ -651,6 +656,70 @@ err_out:
 
     return ERROR(err_code);
 }
+
+int fat16_stat(struct disk* disk, void* private, struct file_stat* stat)
+{
+    int res = 0;
+    struct fat_file_descriptor* descriptor = (struct fat_file_descriptor*) private;
+    struct fat_item* desc_item = descriptor->item;
+    if (desc_item->type != FAT_ITEM_TYPE_FILE)
+    {
+        res = -EINVAGR;
+        goto out;
+    }
+
+    struct fat_directory_item* ritem = desc_item->item;
+    stat->filesize = ritem->filesize;
+    stat->flags = 0x00;
+
+    if (ritem->attribute & FAT_FILE_READ_ONLY)
+    {
+        stat->flags |= FILE_STAT_READ_ONLY;
+    }
+out:
+    return res;
+}
+
+int fat16_seek(void *private, uint32_t offset, FILE_SEEK_MODE seek_mode)
+{
+    int res = 0;
+    struct fat_file_descriptor *desc = private;
+    struct fat_item *desc_item = desc->item;
+    if (desc_item->type != FAT_ITEM_TYPE_FILE)
+    {
+        res = -EINVAGR;
+        goto out;
+    }
+
+    struct fat_directory_item *ritem = desc_item->item;
+    if (offset >= ritem->filesize)
+    {
+        res = -EIO;
+        goto out;
+    }
+
+    switch (seek_mode)
+    {
+    case SEEK_SET:
+        desc->pos = offset;
+        break;
+
+    case SEEK_END:
+        res = -EUNIMP;
+        break;
+
+    case SEEK_CUR:
+        desc->pos += offset;
+        break;
+
+    default:
+        res = -EINVAGR;
+        break;
+    }
+out:
+    return res;
+}
+
 int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr)
 {
     int res = 0;
@@ -673,3 +742,4 @@ int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmem
 out:
     return res;
 }
+
