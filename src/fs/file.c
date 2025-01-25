@@ -76,7 +76,6 @@ static void file_free_descriptor(struct file_descriptor* desc)
     kfree(desc);
 }
 
-
 static struct file_descriptor* file_get_descriptor(int fd)
 {
     if(fd < 0 || fd >= PEACHOS_MAX_FILE_DESCRIPTORS)
@@ -101,7 +100,7 @@ struct filesystem * fs_resolve(struct disk* disk)//return the filesystem that ca
     return fs;
 }
 
-FILE_MODE file_get_mode_by_string(const char* str)
+FILE_MODE file_get_mode_by_string(const char* str)//
 {
     FILE_MODE mode = FILE_MODE_INVALID;
     if (strncmp(str, "r", 1) == 0)
@@ -147,14 +146,12 @@ int fopen(const char* filename, const char* mode_str)
         res = -EINVAGR;
         goto out;
     }
-
     // We cannot have just a root path 0:/ 0:/test.txt
     if (!root_path->first)
     {
         res = -EINVAGR;
         goto out;
     }
-
     // Ensure the disk we are reading from exists
     disk = disk_get(root_path->drive_no);
     if (!disk)
@@ -162,28 +159,23 @@ int fopen(const char* filename, const char* mode_str)
         res = -EIO;
         goto out;
     }
-
     if (!disk->filesystem)
     {
         res = -EIO;
         goto out;
     }
-
     mode = file_get_mode_by_string(mode_str);
     if (mode == FILE_MODE_INVALID)
     {
         res = -EINVAGR;
         goto out;
     }
-
     descriptor_private_data = disk->filesystem->open(disk, root_path->first, mode);
     if (ISERR(descriptor_private_data))
     {
         res = ERROR_I(descriptor_private_data);
         goto out;
     }
-
-    
     res = file_new_descriptor(&desc);
     if (res < 0)
     {
@@ -193,7 +185,6 @@ int fopen(const char* filename, const char* mode_str)
     desc->private = descriptor_private_data;
     desc->disk = disk;
     res = desc->index;
-
 out:
 
     if (res < 0)

@@ -127,13 +127,14 @@ void *fat16_open(struct disk *disk, struct path_part *path, FILE_MODE mode);
 int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr);
 int fat16_seek(void *private, uint32_t offset, FILE_SEEK_MODE seek_mode);
 int fat16_stat(struct disk *disk, void *private, struct file_stat *stat);
-
+int fat16_close(void *descriptor);
 struct filesystem fat16_fs ={
         .resolve = fat16_resolve,
         .open = fat16_open,
         .read = fat16_read,
         .seek = fat16_seek,
         .stat = fat16_stat,
+        .close = fat16_close
 };//FAT16文件系统 vfs 安装文件系统
 struct filesystem * fat16_init()
 {
@@ -141,7 +142,7 @@ struct filesystem * fat16_init()
     return &fat16_fs;
 }
 
-static void fat16_init_private(struct fat_private *private, struct disk *disk)
+static void fat16_init_private(struct fat_private *private, struct disk *disk)//初始化FAT16
 {
     memset(private, 0, sizeof(struct fat_private));
     private->cluster_read_stream = diskstreamer_new(disk->id);
@@ -205,7 +206,7 @@ int fat16_get_root_directory(struct disk *disk, struct fat_private *fat_private,
 {
     int res = 0;
     struct fat_directory_item *dir = 0x00;
-    struct fat_header *primary_header = &fat_private->header.primary_header;//
+    struct fat_header *primary_header = &fat_private->header.primary_header;//主FAT表头
     int root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;//根目录扇区位置 = FAT数*每个FAT扇区数+保留扇区数
     int root_dir_entries = fat_private->header.primary_header.root_dir_entries;//根目录项数
     int root_dir_size = (root_dir_entries * sizeof(struct fat_directory_item));//根目录大小
@@ -273,7 +274,7 @@ int fat16_resolve(struct disk *disk)
         res = -EIO;
         goto out;
     }
-    if(fat_private->header.shared.extended_header.signature != 0x29)//
+    if(fat_private->header.shared.extended_header.signature != 0x29)//检查签名
     {
         res = -EFSNOTUS;
         goto out;
@@ -394,7 +395,7 @@ out:
  */
 static int fat16_get_cluster_for_offset(struct disk *disk, int starting_cluster, int offset)
 {
-    int res = 0;
+    int res = 0; //  初始化返回结果为0，用于存储最终计算的簇号
     struct fat_private *private = disk->fs_private;
     int size_of_cluster_bytes = private->header.primary_header.sectors_per_cluster * disk->sector_size;
     int cluster_to_use = starting_cluster;
@@ -655,6 +656,18 @@ err_out:
         kfree(descriptor);
 
     return ERROR(err_code);
+}
+
+static void fat16_free_file_descriptor(struct fat_file_descriptor* desc)
+{
+    fat16_fat_item_free(desc->item);
+    kfree(desc);
+}
+
+int fat16_close(void* private)
+{
+    fat16_free_file_descriptor((struct fat_file_descriptor*) private);
+    return 0;
 }
 
 int fat16_stat(struct disk* disk, void* private, struct file_stat* stat)

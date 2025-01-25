@@ -22,7 +22,6 @@ enum
 {
     FILE_STAT_READ_ONLY = 0b00000001
 };
-
 typedef unsigned int FILE_STAT_FLAGS;
 
 struct disk;
@@ -49,11 +48,11 @@ struct filesystem
     FS_STAT_FUNCTION stat;//如果提供的磁盘正在使用它的文件系统，文件系统应该从解析返回零
     FS_CLOSE_FUNCTION close;//如果提供的磁盘正在使用它的文件系统，文件系统应该从解析返回零
     char name[20];
-};
+};//文件系统结构体
 struct file_descriptor
 {
     int index;//文件描述符的索引
-    struct filesystem *filesystem;
+    struct filesystem *filesystem;//文件描述符使用的文件系统
     void *private;//初始的文件描述符数据
     struct disk *disk;//被文件描述符使用的那块磁盘
 };
